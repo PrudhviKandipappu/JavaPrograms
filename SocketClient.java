@@ -3,78 +3,47 @@
 import java.io.*;
 import java.net.*;
 
-class ChatClient extends Thread
+class cRecieveMessage extends Thread
 {
-	DataInputStream inputStream;
-	DataOutputStream outputStream;
+	DataInputStream dataReciever;
 	Socket client;
-	ChatClient(String threadName) {
-		super(threadName);
-		try{
-			client = new Socket("192.168.1.40", 4123);
-			this.start();
-			// this.sendMessages();
-		}
-		catch (Exception e) {
-			System.out.println(e);
-		}
+	cRecieveMessage() {
+		client = new SocketClient("192.168.214.247", 4123);
+		dataReciever = new DataInputStream(client.getInputStream());
+		this.start();
 	}
 
 	public void run() {
-		if (this.getName().equals("RecieveMessage")) {
-			try{
-				this.recieveMessages();
-			}
-			catch (Exception e) {
-				System.out.println(e);
-			}
-		}
-
-		if (this.getName().equals("SendMessage")) {
-			try{
-				this.sendMessages();
-			}
-			catch (Exception e) {
-				System.out.println(e);
-			}
-		}
-	}
-
-	public void recieveMessages() throws Exception{
-		inputStream = new DataInputStream(client.getInputStream());
-		System.out.println("?");
+		String message;
 		while (true) {
-			System.out.println("Recieveing Messages.....");
-			String message = inputStream.readUTF();
+			message = dataReciever.readUTF();
 			System.out.println(message);
 		}
 	}
-
-	public void sendMessages() throws Exception {
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-		System.out.print("->");
-		String message = br.readLine();
-		outputStream = new DataOutputStream(client.getOutputStream());
-		while (true) {
-			System.out.println("Sending Messages.....");
-			outputStream.writeUTF(message);
-			if (message.equals("bye")) {
-				client.close();
-				break;
-			}
-			System.out.print("->");
-			message = br.readLine();
-		}
-	}
-
 }
 
-class TestSocketClient
+class cSendMessage extends cRecieveMessage
 {
-	public static void main(String[] args) throws Exception
+	DataOutputStream dataSender;
+	cSendMessage() {
+		dataSender = new DataOutputStream(client.getOutputStream());
+		this.start();
+	}
+
+	public void run() {
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		while (true) {
+			String message = br.readLine();
+			dataSender.writeUTF(message);
+		}
+	}
+}
+
+class cTestSocketClient
+{
+	public static void main(String[] args)
 	{
-		ChatClient recieve = new ChatClient("RecieveMessage");
-		// client.start();
-		ChatClient send = new ChatClient("SendMessage");
+		cRecieveMessage recive = new cRecieveMessage();
+		cSendMessage send = new cSendMessage();
 	}
 }
